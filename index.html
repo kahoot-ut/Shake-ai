@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Snake Game Offline</title>
+    <style>
+        /* CSS - O visual do jogo */
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #1a1a2e;
+            color: #fff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            flex-direction: column;
+        }
+
+        canvas {
+            border: 5px solid #0f3460;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+            background-color: #16213e;
+        }
+
+        .score-container {
+            font-size: 24px;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .instructions {
+            margin-top: 15px;
+            color: #e94560;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="score-container">Pontuação: <span id="score">0</span></div>
+    <canvas id="snakeGame" width="400" height="400"></canvas>
+    <div class="instructions">Use as setas do teclado para jogar!</div>
+
+    <script>
+        // JS - A lógica do jogo
+        const canvas = document.getElementById("snakeGame");
+        const ctx = canvas.getContext("2d");
+        const scoreElement = document.getElementById("score");
+
+        const box = 20; // Tamanho do quadrado
+        let score = 0;
+        let gameSpeed = 100;
+
+        // Inicialização da cobra
+        let snake = [];
+        snake[0] = { x: 9 * box, y: 10 * box };
+
+        // Inicialização da comida
+        let food = {
+            x: Math.floor(Math.random() * 19 + 1) * box,
+            y: Math.floor(Math.random() * 19 + 1) * box
+        };
+
+        let d; // Direção
+
+        document.addEventListener("keydown", direction);
+
+        function direction(event) {
+            let key = event.keyCode;
+            if(key == 37 && d != "RIGHT") d = "LEFT";
+            else if(key == 38 && d != "DOWN") d = "UP";
+            else if(key == 39 && d != "LEFT") d = "RIGHT";
+            else if(key == 40 && d != "UP") d = "DOWN";
+        }
+
+        function collision(head, array) {
+            for(let i = 0; i < array.length; i++) {
+                if(head.x == array[i].x && head.y == array[i].y) return true;
+            }
+            return false;
+        }
+
+        function draw() {
+            // Limpa o canvas
+            ctx.fillStyle = "#16213e";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Desenha a cobra
+            for(let i = 0; i < snake.length; i++) {
+                ctx.fillStyle = (i == 0) ? "#e94560" : "#ffffff";
+                ctx.fillRect(snake[i].x, snake[i].y, box, box);
+                
+                ctx.strokeStyle = "#16213e";
+                ctx.strokeRect(snake[i].x, snake[i].y, box, box);
+            }
+
+            // Desenha a comida
+            ctx.fillStyle = "#4ecca3";
+            ctx.fillRect(food.x, food.y, box, box);
+
+            // Posição antiga da cabeça
+            let snakeX = snake[0].x;
+            let snakeY = snake[0].y;
+
+            // Movimenta a cabeça
+            if( d == "LEFT") snakeX -= box;
+            if( d == "UP") snakeY -= box;
+            if( d == "RIGHT") snakeX += box;
+            if( d == "DOWN") snakeY += box;
+
+            // Se a cobra comer a comida
+            if(snakeX == food.x && snakeY == food.y) {
+                score++;
+                scoreElement.innerHTML = score;
+                food = {
+                    x: Math.floor(Math.random() * 19 + 1) * box,
+                    y: Math.floor(Math.random() * 19 + 1) * box
+                };
+            } else {
+                // Remove a cauda
+                snake.pop();
+            }
+
+            let newHead = { x: snakeX, y: snakeY };
+
+            // Regras de Game Over
+            if(snakeX < 0 || snakeX >= canvas.width || snakeY < 0 || snakeY >= canvas.height || collision(newHead, snake)) {
+                clearInterval(game);
+                alert("Game Over! Pontuação: " + score);
+                location.reload(); // Reinicia o jogo
+            }
+
+            snake.unshift(newHead);
+        }
+
+        let game = setInterval(draw, gameSpeed);
+
+    </script>
+</body>
+</html>
+: JSON.stringify({
+                        version: "nomenclatura-do-modelo-aqui", // Ex: "stable-video-diffusion"
+                        input: { prompt: prompt }
+                    })
+                });
+
+                let prediction = await response.json();
+                
+                if (prediction.error) throw new Error(prediction.error);
+
+                // 2. POLLING (VERIFICAÇÃO PERIÓDICA)
+                const predictionId = prediction.id;
+                pollStatus(predictionId);
+
+            } catch (error) {
+                alert("Erro ao conectar com a API: " + error.message);
+                resetUI();
+            }
+        });
+
+        async function pollStatus(id) {
+            const pollUrl = `${MODEL_URL}/${id}`;
+            
+            const check = setInterval(async () => {
+                try {
+                    const response = await fetch(pollUrl, {
+                        headers: { 'Authorization': `Token ${API_TOKEN}` }
+                    });
+                    const data = await response.json();
+
+                    statusText.innerText = `Status: ${data.status}...`;
+
+                    if (data.status === "succeeded") {
+                        clearInterval(check);
+                        showVideo(data.output); // 'output' costuma ser a URL do vídeo ou array de URLs
+                    } else if (data.status === "failed") {
+                        clearInterval(check);
+                        throw new Error("A IA falhou em processar o vídeo.");
+                    }
+                } catch (e) {
+                    clearInterval(check);
+                    alert(e.message);
+                    resetUI();
+                }
+            }, 4000); // Verifica a cada 4 segundos
+        }
+
+        function showVideo(videoUrl) {
+            loading.classList.add('hidden');
+            videoContainer.classList.remove('hidden');
+            // Algumas APIs retornam array, pegamos a primeira posição
+            videoPlayer.src = Array.isArray(videoUrl) ? videoUrl[0] : videoUrl;
+            videoPlayer.load();
+        }
+
+        function resetUI() {
+            generateBtn.disabled = false;
+            generateBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            resultArea.classList.add('hidden');
+        }
+    </script>
+</body>
+</html>
