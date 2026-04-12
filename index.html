@@ -1,206 +1,247 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Snake Game Offline</title>
-    <style>
-        /* CSS - O visual do jogo */
-        body {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            background-color: #1a1a2e;
-            color: #fff;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            flex-direction: column;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Snake Battles</title>
 
-        canvas {
-            border: 5px solid #0f3460;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
-            background-color: #16213e;
-        }
+<style>
+body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: #1a1a2e;
+    color: white;
+    font-family: sans-serif;
+    margin: 0;
+}
 
-        .score-container {
-            font-size: 24px;
-            margin-bottom: 10px;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-        }
+/* HUD */
+.hud {
+    width: 400px;
+    margin-top: 10px;
+}
 
-        .instructions {
-            margin-top: 15px;
-            color: #e94560;
-            font-size: 14px;
-        }
-    </style>
+.hud-top {
+    display: flex;
+    justify-content: space-between;
+}
+
+.energy-bar {
+    height: 15px;
+    background: #333;
+    border-radius: 10px;
+    overflow: hidden;
+    margin: 5px 0;
+}
+
+#energyFill {
+    height: 100%;
+    width: 100%;
+    background: linear-gradient(90deg, #00ffcc, #00a896);
+}
+
+.powerups {
+    font-size: 14px;
+    color: #e94560;
+}
+
+/* Canvas */
+canvas {
+    background: #16213e;
+    border: 5px solid #0f3460;
+}
+
+/* Controles */
+.controls {
+    margin-top: 15px;
+    text-align: center;
+}
+
+.controls button {
+    width: 60px;
+    height: 60px;
+    margin: 5px;
+    font-size: 20px;
+    border-radius: 10px;
+    border: none;
+    background: #0f3460;
+    color: white;
+}
+</style>
 </head>
+
 <body>
 
-    <div class="score-container">Pontuação: <span id="score">0</span></div>
-    <canvas id="snakeGame" width="400" height="400"></canvas>
-    <div class="instructions">Use as setas do teclado para jogar!</div>
+<div class="hud">
+    <div class="hud-top">
+        <div>❤️ <span id="lives">3</span></div>
+        <div>🏆 <span id="score">0</span></div>
+    </div>
 
-    <script>
-        // JS - A lógica do jogo
-        const canvas = document.getElementById("snakeGame");
-        const ctx = canvas.getContext("2d");
-        const scoreElement = document.getElementById("score");
+    <div class="energy-bar">
+        <div id="energyFill"></div>
+    </div>
 
-        const box = 20; // Tamanho do quadrado
-        let score = 0;
-        let gameSpeed = 100;
+    <div class="powerups">
+        Power-up: <span id="powerups">Nenhum</span>
+    </div>
+</div>
 
-        // Inicialização da cobra
-        let snake = [];
-        snake[0] = { x: 9 * box, y: 10 * box };
+<canvas id="game" width="400" height="400"></canvas>
 
-        // Inicialização da comida
-        let food = {
-            x: Math.floor(Math.random() * 19 + 1) * box,
-            y: Math.floor(Math.random() * 19 + 1) * box
-        };
+<div class="controls">
+    <button id="up">⬆</button><br>
+    <button id="left">⬅</button>
+    <button id="down">⬇</button>
+    <button id="right">➡</button>
+</div>
 
-        let d; // Direção
+<script>
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
 
-        document.addEventListener("keydown", direction);
+const box = 20;
 
-        function direction(event) {
-            let key = event.keyCode;
-            if(key == 37 && d != "RIGHT") d = "LEFT";
-            else if(key == 38 && d != "DOWN") d = "UP";
-            else if(key == 39 && d != "LEFT") d = "RIGHT";
-            else if(key == 40 && d != "UP") d = "DOWN";
+let snake = [{x: 200, y: 200}];
+let food = {x: 100, y: 100};
+let powerUp = {x: 300, y: 300};
+
+let d;
+
+// HUD
+let score = 0;
+let lives = 3;
+let energy = 100;
+let maxEnergy = 100;
+let activePower = "Nenhum";
+
+const scoreEl = document.getElementById("score");
+const livesEl = document.getElementById("lives");
+const energyFill = document.getElementById("energyFill");
+const powerupsEl = document.getElementById("powerups");
+
+// CONTROLES TECLADO
+document.addEventListener("keydown", e => {
+    if(e.keyCode == 37 && d != "RIGHT") d = "LEFT";
+    if(e.keyCode == 38 && d != "DOWN") d = "UP";
+    if(e.keyCode == 39 && d != "LEFT") d = "RIGHT";
+    if(e.keyCode == 40 && d != "UP") d = "DOWN";
+
+    // BOOST
+    if(e.key == "Shift" && energy > 10) speed = 50;
+});
+
+document.addEventListener("keyup", e => {
+    if(e.key == "Shift") speed = 100;
+});
+
+// TOUCH BOTÕES
+["up","down","left","right"].forEach(id => {
+    document.getElementById(id).addEventListener("click", () => {
+        if(id=="up" && d!="DOWN") d="UP";
+        if(id=="down" && d!="UP") d="DOWN";
+        if(id=="left" && d!="RIGHT") d="LEFT";
+        if(id=="right" && d!="LEFT") d="RIGHT";
+    });
+});
+
+// SWIPE
+let startX, startY;
+canvas.addEventListener("touchstart", e => {
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+});
+
+canvas.addEventListener("touchmove", e => {
+    let dx = e.touches[0].clientX - startX;
+    let dy = e.touches[0].clientY - startY;
+
+    if(Math.abs(dx) > Math.abs(dy)) {
+        if(dx > 0 && d!="LEFT") d="RIGHT";
+        else if(dx < 0 && d!="RIGHT") d="LEFT";
+    } else {
+        if(dy > 0 && d!="UP") d="DOWN";
+        else if(dy < 0 && d!="DOWN") d="UP";
+    }
+});
+
+function randomPos() {
+    return Math.floor(Math.random() * 20) * box;
+}
+
+function draw() {
+
+    ctx.fillStyle = "#16213e";
+    ctx.fillRect(0,0,400,400);
+
+    // cobra
+    snake.forEach((s,i)=>{
+        ctx.fillStyle = i==0 ? "#e94560" : "#fff";
+        ctx.fillRect(s.x, s.y, box, box);
+    });
+
+    // comida
+    ctx.fillStyle = "lime";
+    ctx.fillRect(food.x, food.y, box, box);
+
+    // powerup
+    ctx.fillStyle = "yellow";
+    ctx.fillRect(powerUp.x, powerUp.y, box, box);
+
+    let headX = snake[0].x;
+    let headY = snake[0].y;
+
+    if(d=="LEFT") headX -= box;
+    if(d=="RIGHT") headX += box;
+    if(d=="UP") headY -= box;
+    if(d=="DOWN") headY += box;
+
+    // comida
+    if(headX==food.x && headY==food.y){
+        score++;
+        scoreEl.innerText = score;
+        food = {x: randomPos(), y: randomPos()};
+    } else {
+        snake.pop();
+    }
+
+    // power-up
+    if(headX==powerUp.x && headY==powerUp.y){
+        activePower = "Energia ⚡";
+        powerupsEl.innerText = activePower;
+        energy = Math.min(energy+30, maxEnergy);
+        powerUp = {x: randomPos(), y: randomPos()};
+    }
+
+    let newHead = {x: headX, y: headY};
+
+    // colisão
+    if(headX<0||headY<0||headX>=400||headY>=400){
+        lives--;
+        livesEl.innerText = lives;
+
+        if(lives<=0){
+            alert("Game Over! Pontos: "+score);
+            location.reload();
         }
 
-        function collision(head, array) {
-            for(let i = 0; i < array.length; i++) {
-                if(head.x == array[i].x && head.y == array[i].y) return true;
-            }
-            return false;
-        }
+        snake = [{x:200,y:200}];
+        d = null;
+        return;
+    }
 
-        function draw() {
-            // Limpa o canvas
-            ctx.fillStyle = "#16213e";
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
+    snake.unshift(newHead);
 
-            // Desenha a cobra
-            for(let i = 0; i < snake.length; i++) {
-                ctx.fillStyle = (i == 0) ? "#e94560" : "#ffffff";
-                ctx.fillRect(snake[i].x, snake[i].y, box, box);
-                
-                ctx.strokeStyle = "#16213e";
-                ctx.strokeRect(snake[i].x, snake[i].y, box, box);
-            }
+    // energia
+    energy -= 0.1;
+    if(energy<0) energy=0;
+    energyFill.style.width = (energy/maxEnergy*100)+"%";
+}
 
-            // Desenha a comida
-            ctx.fillStyle = "#4ecca3";
-            ctx.fillRect(food.x, food.y, box, box);
+let speed = 100;
+setInterval(draw, speed);
+</script>
 
-            // Posição antiga da cabeça
-            let snakeX = snake[0].x;
-            let snakeY = snake[0].y;
-
-            // Movimenta a cabeça
-            if( d == "LEFT") snakeX -= box;
-            if( d == "UP") snakeY -= box;
-            if( d == "RIGHT") snakeX += box;
-            if( d == "DOWN") snakeY += box;
-
-            // Se a cobra comer a comida
-            if(snakeX == food.x && snakeY == food.y) {
-                score++;
-                scoreElement.innerHTML = score;
-                food = {
-                    x: Math.floor(Math.random() * 19 + 1) * box,
-                    y: Math.floor(Math.random() * 19 + 1) * box
-                };
-            } else {
-                // Remove a cauda
-                snake.pop();
-            }
-
-            let newHead = { x: snakeX, y: snakeY };
-
-            // Regras de Game Over
-            if(snakeX < 0 || snakeX >= canvas.width || snakeY < 0 || snakeY >= canvas.height || collision(newHead, snake)) {
-                clearInterval(game);
-                alert("Game Over! Pontuação: " + score);
-                location.reload(); // Reinicia o jogo
-            }
-
-            snake.unshift(newHead);
-        }
-
-        let game = setInterval(draw, gameSpeed);
-
-    </script>
-</body>
-</html>
-: JSON.stringify({
-                        version: "nomenclatura-do-modelo-aqui", // Ex: "stable-video-diffusion"
-                        input: { prompt: prompt }
-                    })
-                });
-
-                let prediction = await response.json();
-                
-                if (prediction.error) throw new Error(prediction.error);
-
-                // 2. POLLING (VERIFICAÇÃO PERIÓDICA)
-                const predictionId = prediction.id;
-                pollStatus(predictionId);
-
-            } catch (error) {
-                alert("Erro ao conectar com a API: " + error.message);
-                resetUI();
-            }
-        });
-
-        async function pollStatus(id) {
-            const pollUrl = `${MODEL_URL}/${id}`;
-            
-            const check = setInterval(async () => {
-                try {
-                    const response = await fetch(pollUrl, {
-                        headers: { 'Authorization': `Token ${API_TOKEN}` }
-                    });
-                    const data = await response.json();
-
-                    statusText.innerText = `Status: ${data.status}...`;
-
-                    if (data.status === "succeeded") {
-                        clearInterval(check);
-                        showVideo(data.output); // 'output' costuma ser a URL do vídeo ou array de URLs
-                    } else if (data.status === "failed") {
-                        clearInterval(check);
-                        throw new Error("A IA falhou em processar o vídeo.");
-                    }
-                } catch (e) {
-                    clearInterval(check);
-                    alert(e.message);
-                    resetUI();
-                }
-            }, 4000); // Verifica a cada 4 segundos
-        }
-
-        function showVideo(videoUrl) {
-            loading.classList.add('hidden');
-            videoContainer.classList.remove('hidden');
-            // Algumas APIs retornam array, pegamos a primeira posição
-            videoPlayer.src = Array.isArray(videoUrl) ? videoUrl[0] : videoUrl;
-            videoPlayer.load();
-        }
-
-        function resetUI() {
-            generateBtn.disabled = false;
-            generateBtn.classList.remove('opacity-50', 'cursor-not-allowed');
-            resultArea.classList.add('hidden');
-        }
-    </script>
 </body>
 </html>
