@@ -3,41 +3,135 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Snake Battles ULTRA</title>
+    <title>Snake Battles ULTRA - Pro Edition</title>
     <style>
+        :root {
+            --bg-main: #0f172a;
+            --bg-canvas: #020617;
+            --primary: #0ea5e9;
+            --primary-hover: #0284c7;
+            --accent: #22c55e;
+            --danger: #ef4444;
+        }
+
         body {
             margin: 0;
             display: flex;
             flex-direction: column;
             align-items: center;
-            background: #0f172a;
+            background: var(--bg-main);
             color: white;
-            font-family: sans-serif;
-            touch-action: manipulation;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+        }
+
+        /* Telas de Menu / Login */
+        .screen {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 400px;
+            padding: 20px;
+            box-sizing: border-box;
+            text-align: center;
+        }
+
+        .screen.active {
+            display: flex;
         }
 
         h1 {
-            margin: 15px 0 5px 0;
-            font-size: 24px;
-            color: #0ea5e9;
+            color: var(--primary);
+            font-size: 28px;
+            margin-bottom: 20px;
+            text-shadow: 0 0 10px rgba(14, 165, 233, 0.3);
         }
 
-        /* HUD */
+        h2 {
+            font-size: 20px;
+            margin-bottom: 15px;
+            color: #94a3b8;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border: 2px solid #334155;
+            background: #1e293b;
+            color: white;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+
+        input:focus {
+            border-color: var(--primary);
+            outline: none;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            margin: 8px 0;
+            border: none;
+            border-radius: 8px;
+            background: var(--primary);
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            background: var(--primary-hover);
+        }
+
+        button.secondary {
+            background: #334155;
+        }
+        button.secondary:hover {
+            background: #475569;
+        }
+
+        /* Leaderboard Table */
+        .leaderboard-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+            background: #1e293b;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .leaderboard-table th, .leaderboard-table td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #334155;
+        }
+
+        .leaderboard-table th {
+            background: #475569;
+            color: var(--primary);
+        }
+
+        /* HUD do Jogo */
         .hud { 
             width: 400px; 
             margin: 10px 0; 
-            box-sizing: border-box;
             padding: 0 5px;
+            box-sizing: border-box;
         }
         .hud-top { 
             display: flex; 
             justify-content: space-between; 
             margin-bottom: 8px;
-            font-size: 18px;
-            font-weight: bold;
+            font-size: 16px;
         }
         .energy-bar { 
-            height: 12px; 
+            height: 10px; 
             background: #1e293b; 
             border-radius: 10px; 
             overflow: hidden;
@@ -46,39 +140,26 @@
         #energyFill { 
             height: 100%; 
             width: 100%;
-            background: linear-gradient(90deg, #22c55e, #a3e635); 
-            transition: width 0.1s linear;
+            background: linear-gradient(90deg, var(--accent), #a3e635); 
         }
 
         canvas {
-            border: 4px solid #0ea5e9;
-            background: #020617;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+            border: 4px solid var(--primary);
+            background: var(--bg-canvas);
+            border-radius: 4px;
         }
 
         /* Controles Mobile */
         .controls {
-            margin-top: 15px;
+            margin-top: 10px;
             display: grid;
-            grid-template-columns: repeat(3, 60px);
-            grid-template-rows: repeat(2, 60px);
-            gap: 10px;
-            justify-content: center;
+            grid-template-columns: repeat(3, 50px);
+            grid-template-rows: repeat(2, 50px);
+            gap: 8px;
         }
         .controls button {
-            width: 60px;
-            height: 60px;
-            border: none;
-            border-radius: 12px;
-            background: #0ea5e9;
-            color: white;
-            font-size: 20px;
-            cursor: pointer;
-            font-weight: bold;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
-        }
-        .controls button:active {
-            background: #0284c7;
+            width: 50px; height: 50px; padding: 0; margin: 0;
+            font-size: 18px; border-radius: 8px;
         }
         #up { grid-column: 2; grid-row: 1; }
         #left { grid-column: 1; grid-row: 2; }
@@ -88,267 +169,451 @@
 </head>
 <body>
 
-<h1>SNAKE BATTLES ULTRA</h1>
-
-<div class="hud">
-    <div class="hud-top">
-        <div>❤️ Vidas: <span id="lives">3</span></div>
-        <div>🏆 Pontos: <span id="score">0</span></div>
+    <!-- TELA 1: LOGIN -->
+    <div id="screenLogin" class="screen active">
+        <h1>SNAKE BATTLES ULTRA</h1>
+        <h2>Identifique-se para Jogar</h2>
+        <input type="text" id="usernameInput" placeholder="Digite seu apelido/Nick..." maxlength="12">
+        <button id="btnLogin">Entrar / Cadastrar</button>
     </div>
-    <div class="energy-bar"><div id="energyFill"></div></div>
-</div>
 
-<canvas id="game" width="400" height="400"></canvas>
+    <!-- TELA 2: MENU PRINCIPAL -->
+    <div id="screenMenu" class="screen">
+        <h1 id="welcomeText">Olá, Jogador!</h1>
+        <button id="btnSoloMode">Modo Solo (vs Bot)</button>
+        <button id="btnMultiplayerMode">Multiplayer Local (Código de Sala)</button>
+        <button id="btnLeaderboard" class="secondary">Ver Placar Geral</button>
+        <button id="btnLogout" class="secondary" style="margin-top: 20px; background-color: #ef4444;">Sair da Conta</button>
+    </div>
 
-<div class="controls">
-    <button id="up">⬆</button>
-    <button id="left">⬅</button>
-    <button id="down">⬇</button>
-    <button id="right">➡</button>
-</div>
+    <!-- TELA 3: SALA MULTIPLAYER -->
+    <div id="screenRoom" class="screen">
+        <h1>Criar/Entrar em Sala</h1>
+        <p style="color: #94a3b8; font-size: 14px;">Insira um código numérico qualquer para simular a conexão de pareamento com o segundo jogador.</p>
+        <input type="number" id="roomCodeInput" placeholder="Ex: 1234">
+        <button id="btnStartMatch">Iniciar Partida Split-Screen</button>
+        <button id="btnBackMenu" class="secondary">Voltar ao Menu</button>
+    </div>
+
+    <!-- TELA 4: LEADERBOARD -->
+    <div id="screenLeaderboard" class="screen">
+        <h1>Placar de Líderes</h1>
+        <table class="leaderboard-table">
+            <thead>
+                <tr>
+                    <th>Pos</th>
+                    <th>Jogador</th>
+                    <th>Pontos Máximos</th>
+                </tr>
+            </thead>
+            <tbody id="leaderboardBody">
+                <!-- Inserido via JS -->
+            </tbody>
+        </table>
+        <button id="btnBackMenu2" class="secondary">Voltar ao Menu</button>
+    </div>
+
+    <!-- TELA 5: JOGO ATIVO -->
+    <div id="screenGame" class="screen">
+        <div class="hud">
+            <div class="hud-top">
+                <div id="hudP1">🟢 <span id="p1Name">P1</span>: <span id="scoreP1">0</span> pts</div>
+                <div id="hudLives">❤️ Vidas: <span id="lives">3</span></div>
+                <div id="hudP2">🔴 <span id="p2Name">Bot</span>: <span id="scoreP2">0</span> pts</div>
+            </div>
+            <div class="energy-bar" id="energyContainer"><div id="energyFill"></div></div>
+        </div>
+
+        <canvas id="game" width="400" height="400"></canvas>
+
+        <div class="controls" id="mobileControls">
+            <button id="up">⬆</button>
+            <button id="left">⬅</button>
+            <button id="down">⬇</button>
+            <button id="right">➡</button>
+        </div>
+        <button id="btnQuitGame" class="secondary" style="margin-top: 15px;">Abandonar Partida</button>
+    </div>
 
 <script>
+// --- ENGENHARIA DE TELAS ---
+const screens = {
+    login: document.getElementById("screenLogin"),
+    menu: document.getElementById("screenMenu"),
+    room: document.getElementById("screenRoom"),
+    leaderboard: document.getElementById("screenLeaderboard"),
+    game: document.getElementById("screenGame")
+};
+
+function changeScreen(target) {
+    Object.values(screens).forEach(s => s.classList.remove("active"));
+    screens[target].classList.add("active");
+    if(target !== 'game') isGameRunning = false;
+}
+
+// --- VARIÁVEIS GLOBAIS DE ESTADO ---
+let currentUser = localStorage.getItem("currentUser") || "";
+let currentGameMode = "solo"; // "solo" ou "multi"
+let isGameRunning = false;
+
+// Elementos de Input
+const usernameInput = document.getElementById("usernameInput");
+const roomCodeInput = document.getElementById("roomCodeInput");
+
+// --- SISTEMA DE LOGIN E LOCALSTORAGE ---
+if (currentUser) {
+    showMenu();
+}
+
+document.getElementById("btnLogin").onclick = () => {
+    let name = usernameInput.value.trim();
+    if (!name) return alert("Digite um nome válido!");
+    localStorage.setItem("currentUser", name);
+    currentUser = name;
+    
+    // Inicializa no ranking se não existir
+    let ranks = JSON.parse(localStorage.getItem("snake_ranks")) || {};
+    if (!ranks[name]) ranks[name] = 0;
+    localStorage.setItem("snake_ranks", JSON.stringify(ranks));
+
+    showMenu();
+};
+
+document.getElementById("btnLogout").onclick = () => {
+    localStorage.removeItem("currentUser");
+    currentUser = "";
+    changeScreen("login");
+};
+
+function showMenu() {
+    document.getElementById("welcomeText").innerText = `Olá, ${currentUser}!`;
+    changeScreen("menu");
+}
+
+// Navegação de botões
+document.getElementById("btnSoloMode").onclick = () => {
+    currentGameMode = "solo";
+    initGame();
+};
+document.getElementById("btnMultiplayerMode").onclick = () => changeScreen("room");
+document.getElementById("btnBackMenu").onclick = () => showMenu();
+document.getElementById("btnBackMenu2").onclick = () => showMenu();
+document.getElementById("btnQuitGame").onclick = () => { isGameRunning = false; showMenu(); };
+
+document.getElementById("btnStartMatch").onclick = () => {
+    if(!roomCodeInput.value) return alert("Insira o código da sala para parear!");
+    currentGameMode = "multi";
+    initGame();
+};
+
+document.getElementById("btnLeaderboard").onclick = () => {
+    const tbody = document.getElementById("leaderboardBody");
+    tbody.innerHTML = "";
+    let ranks = JSON.parse(localStorage.getItem("snake_ranks")) || {};
+    
+    // Ordena do maior para o menor
+    let sorted = Object.entries(ranks).sort((a,b) => b[1] - a[1]);
+    
+    if(sorted.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="3">Nenhum recorde registrado.</td></tr>`;
+    } else {
+        sorted.forEach(([name, score], index) => {
+            tbody.innerHTML += `<tr>
+                <td>${index + 1}º</td>
+                <td>${name}</td>
+                <td>${score} pts</td>
+            </tr>`;
+        });
+    }
+    changeScreen("leaderboard");
+};
+
+function saveScore(finalScore) {
+    let ranks = JSON.parse(localStorage.getItem("snake_ranks")) || {};
+    if(!ranks[currentUser] || finalScore > ranks[currentUser]) {
+        ranks[currentUser] = finalScore;
+        localStorage.setItem("snake_ranks", JSON.stringify(ranks));
+    }
+}
+
+
+// ==========================================
+//             LÓGICA DO JOGO
+// ==========================================
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
-
 const box = 20;
 const canvasSize = 400;
 
-// Estado do Jogo
-let snake = [{x: 200, y: 200}];
-let dir = null;
-let nextDir = null; // Evita bug de duplo clique rápido se auto-colidir
-
-let bot = [{x: 100, y: 100}];
-let botDir = "RIGHT";
-
-let food = { x: randomGrid(), y: randomGrid() };
-let score = 0;
-let lives = 3;
-let energy = 100;
-let particles = [];
-
-// Controle de FPS (Velocidade do jogo travada)
+let snake1, snake2;
+let dir1, nextDir1, dir2, nextDir2;
+let food, scoreP1, scoreP2, lives, energy, particles;
 let lastGridUpdateTime = 0;
-const gameSpeed = 130; // Atualiza a cada 130ms (Velocidade ideal)
+const gameSpeed = 130; 
 
 function randomGrid() {
     return Math.floor(Math.random() * (canvasSize / box)) * box;
 }
 
-// Input do Teclado
-document.addEventListener("keydown", e => {
-    if ((e.key === "ArrowLeft" || e.key === "a") && dir !== "RIGHT") nextDir = "LEFT";
-    if ((e.key === "ArrowUp" || e.key === "w") && dir !== "DOWN") nextDir = "UP";
-    if ((e.key === "ArrowRight" || e.key === "d") && dir !== "LEFT") nextDir = "RIGHT";
-    if ((e.key === "ArrowDown" || e.key === "s") && dir !== "UP") nextDir = "DOWN";
-});
+// Configuração Inicial da Partida
+function initGame() {
+    changeScreen("game");
+    isGameRunning = true;
 
-// Input dos Botões na Tela
-const buttons = {
-    up: () => { if (dir !== "DOWN") nextDir = "UP"; },
-    down: () => { if (dir !== "UP") nextDir = "DOWN"; },
-    left: () => { if (dir !== "RIGHT") nextDir = "LEFT"; },
-    right: () => { if (dir !== "LEFT") nextDir = "RIGHT"; }
-};
+    // Configuração de Jogadores baseado no Modo
+    snake1 = [{x: 280, y: 200}];
+    dir1 = null; nextDir1 = null;
+    scoreP1 = 0;
+    document.getElementById("p1Name").innerText = currentUser;
+    document.getElementById("scoreP1").innerText = "0";
 
-Object.keys(buttons).forEach(id => {
-    document.getElementById(id).addEventListener("click", buttons[id]);
-    document.getElementById(id).addEventListener("touchstart", (e) => {
-        e.preventDefault();
-        buttons[id]();
-    });
-});
+    if (currentGameMode === "solo") {
+        document.getElementById("p2Name").innerText = "CyberBot";
+        document.getElementById("hudLives").style.display = "block";
+        document.getElementById("energyContainer").style.display = "block";
+        document.getElementById("mobileControls").style.display = "grid";
+        snake2 = [{x: 100, y: 100}];
+        dir2 = "RIGHT";
+        lives = 3;
+        energy = 100;
+        document.getElementById("lives").innerText = lives;
+    } else {
+        // Multiplayer Local Simulado por Código
+        document.getElementById("p2Name").innerText = "Player 2";
+        document.getElementById("hudLives").style.display = "none"; // Sem vidas no PVP
+        document.getElementById("energyContainer").style.display = "none"; // Sem fome no PVP
+        document.getElementById("mobileControls").style.display = "none"; // Requer teclado para 2 players
+        snake2 = [{x: 100, y: 200}];
+        dir2 = null; nextDir2 = null;
+        scoreP2 = 0;
+        document.getElementById("scoreP2").innerText = "0";
+    }
 
-// IA Inteligente do Bot
-function moveBot() {
-    const head = bot[0];
-    let possibleMoves = [
-        { dir: "LEFT", x: head.x - box, y: head.y },
-        { dir: "RIGHT", x: head.x + box, y: head.y },
-        { dir: "UP", x: head.x, y: head.y - box },
-        { dir: "DOWN", x: head.x, y: head.y + box }
-    ];
-
-    // 1. Filtrar movimentos que batem nas paredes
-    possibleMoves = possibleMoves.filter(m => m.x >= 0 && m.y >= 0 && m.x < canvasSize && m.y < canvasSize);
-
-    // 2. Filtrar movimentos que batem no próprio corpo do bot
-    possibleMoves = possibleMoves.filter(m => !bot.some(b => b.x === m.x && b.y === m.y));
-
-    if (possibleMoves.length === 0) return; // Desiste se não houver saída
-
-    // 3. Escolher o movimento mais perto da comida
-    possibleMoves.sort((a, b) => {
-        const distA = Math.abs(a.x - food.x) + Math.abs(a.y - food.y);
-        const distB = Math.abs(b.x - food.x) + Math.abs(b.y - food.y);
-        return distA - distB;
-    });
-
-    botDir = possibleMoves[0].dir;
+    food = { x: randomGrid(), y: randomGrid() };
+    particles = [];
+    lastGridUpdateTime = 0;
 }
 
-// Sistema de Partículas (Efeito ao comer)
-function spawnParticles(x, y) {
-    for (let i = 0; i < 10; i++) {
+// Controles Globais (Teclado)
+document.addEventListener("keydown", e => {
+    if (!isGameRunning) return;
+
+    // CONTROLES P1 (Seta ou Mobile)
+    if (e.key === "ArrowLeft" && dir1 !== "RIGHT") nextDir1 = "LEFT";
+    if (e.key === "ArrowUp" && dir1 !== "DOWN") nextDir1 = "UP";
+    if (e.key === "ArrowRight" && dir1 !== "LEFT") nextDir1 = "RIGHT";
+    if (e.key === "ArrowDown" && dir1 !== "UP") nextDir1 = "DOWN";
+
+    // CONTROLES P2 (Apenas se for Modo Multiplayer - Teclas WASD)
+    if (currentGameMode === "multi") {
+        if ((e.key === "a" || e.key === "A") && dir2 !== "RIGHT") nextDir2 = "LEFT";
+        if ((e.key === "w" || e.key === "W") && dir2 !== "DOWN") nextDir2 = "UP";
+        if ((e.key === "d" || e.key === "D") && dir2 !== "LEFT") nextDir2 = "RIGHT";
+        if ((e.key === "s" || e.key === "S") && dir2 !== "UP") nextDir2 = "DOWN";
+    }
+});
+
+// Controles On-Screen (Mobile P1)
+const mobileButtons = {
+    up: () => { if (dir1 !== "DOWN") nextDir1 = "UP"; },
+    down: () => { if (dir1 !== "UP") nextDir1 = "DOWN"; },
+    left: () => { if (dir1 !== "RIGHT") nextDir1 = "LEFT"; },
+    right: () => { if (dir1 !== "LEFT") nextDir1 = "RIGHT"; }
+};
+Object.keys(mobileButtons).forEach(id => {
+    document.getElementById(id).onclick = mobileButtons[id];
+});
+
+// Inteligência Artificial do CyberBot
+function runBotAI() {
+    const head = snake2[0];
+    let moves = [
+        { d: "LEFT", x: head.x - box, y: head.y },
+        { d: "RIGHT", x: head.x + box, y: head.y },
+        { d: "UP", x: head.x, y: head.y - box },
+        { d: "DOWN", x: head.x, y: head.y + box }
+    ];
+    // Evitar paredes e auto-colisão
+    moves = moves.filter(m => m.x >= 0 && m.y >= 0 && m.x < canvasSize && m.y < canvasSize);
+    moves = moves.filter(m => !snake2.some(b => b.x === m.x && b.y === m.y));
+    
+    if (moves.length === 0) return; // Encurralado
+    
+    // Buscar a menor distância até a comida
+    moves.sort((a, b) => {
+        return (Math.abs(a.x - food.x) + Math.abs(a.y - food.y)) - (Math.abs(b.x - food.x) + Math.abs(b.y - food.y));
+    });
+    dir2 = moves[0].d;
+}
+
+// Sistema de Partículas
+function spawnParticles(x, y, color) {
+    for (let i = 0; i < 8; i++) {
         particles.push({
-            x: x + box / 2,
-            y: y + box / 2,
-            dx: (Math.random() - 0.5) * 6,
-            dy: (Math.random() - 0.5) * 6,
-            radius: Math.random() * 3 + 1,
-            color: "yellow",
-            life: 25
+            x: x + box/2, y: y + box/2,
+            dx: (Math.random() - 0.5) * 5, dy: (Math.random() - 0.5) * 5,
+            radius: Math.random() * 2 + 1, color: color, life: 20
         });
     }
 }
 
-function resetRound() {
-    snake = [{x: 200, y: 200}];
-    bot = [{x: 100, y: 100}];
-    dir = null;
-    nextDir = null;
-    botDir = "RIGHT";
-    energy = 100;
-    document.getElementById("energyFill").style.width = "100%";
-}
-
-// Lógica Principal de Movimentação e Regras
+// Lógica de Movimentação em Loop Fixo
 function updateGameLogic() {
-    if (nextDir) dir = nextDir;
+    if (!isGameRunning) return;
 
-    // Movimento do Jogador (Só anda se uma direção foi escolhida)
-    let px = snake[0].x;
-    let py = snake[0].y;
+    if (nextDir1) dir1 = nextDir1;
+    if (currentGameMode === "multi" && nextDir2) dir2 = nextDir2;
 
-    if (dir === "LEFT") px -= box;
-    if (dir === "RIGHT") px += box;
-    if (dir === "UP") py -= box;
-    if (dir === "DOWN") py += box;
+    // Calcular próxima cabeça P1
+    let p1X = snake1[0].x;
+    let p1Y = snake1[0].y;
+    if (dir1 === "LEFT") p1X -= box;
+    if (dir1 === "RIGHT") p1X += box;
+    if (dir1 === "UP") p1Y -= box;
+    if (dir1 === "DOWN") p1Y += box;
 
-    // Movimento do Bot
-    moveBot();
-    let bx = bot[0].x;
-    let by = bot[0].y;
+    // Calcular próxima cabeça P2 / Bot
+    if (currentGameMode === "solo") runBotAI();
+    let p2X = snake2[0].x;
+    let p2Y = snake2[0].y;
+    if (dir2 === "LEFT") p2X -= box;
+    if (dir2 === "RIGHT") p2X += box;
+    if (dir2 === "UP") p2Y -= box;
+    if (dir2 === "DOWN") p2Y += box;
 
-    if (botDir === "LEFT") bx -= box;
-    if (botDir === "RIGHT") bx += box;
-    if (botDir === "UP") by -= box;
-    if (botDir === "DOWN") by += box;
-
-    // Consumo de Energia por andar (Apenas se o player começou a se mover)
-    if (dir) {
-        energy -= 1.5; 
+    // Regra de Energia (Apenas no Modo Solo)
+    if (currentGameMode === "solo" && dir1) {
+        energy -= 1.2;
         if (energy <= 0) {
-            energy = 0;
-            lives--;
-            document.getElementById("lives").innerText = lives;
-            resetRound();
-            if (lives <= 0) gameOver();
+            handleFailure("Sua energia acabou!");
             return;
         }
         document.getElementById("energyFill").style.width = energy + "%";
     }
 
-    // Player comeu fruta?
-    if (px === food.x && py === food.y) {
-        score += 10;
-        document.getElementById("score").innerText = score;
-        energy = Math.min(100, energy + 25); // Recupera energia
-        spawnParticles(food.x, food.y);
+    // Colisão Fruta P1
+    if (p1X === food.x && p1Y === food.y) {
+        scoreP1 += 10;
+        document.getElementById("scoreP1").innerText = scoreP1;
+        if (currentGameMode === "solo") energy = Math.min(100, energy + 20);
+        spawnParticles(food.x, food.y, "#22c55e");
         food = { x: randomGrid(), y: randomGrid() };
-    } else if (dir) {
-        snake.pop(); // Só remove a cauda se estiver andando
+    } else if (dir1) {
+        snake1.pop();
     }
 
-    // Bot comeu fruta?
-    if (bx === food.x && by === food.y) {
-        spawnParticles(food.x, food.y);
+    // Colisão Fruta P2 / Bot
+    let p2Moved = (currentGameMode === "solo" || dir2);
+    if (p2X === food.x && p2Y === food.y) {
+        scoreP2 += 10;
+        document.getElementById("scoreP2").innerText = scoreP2;
+        spawnParticles(food.x, food.y, "#ef4444");
         food = { x: randomGrid(), y: randomGrid() };
-    } else {
-        bot.pop();
+    } else if (p2Moved) {
+        snake2.pop();
     }
 
-    if (dir) snake.unshift({ x: px, y: py });
-    bot.unshift({ x: bx, y: by });
+    // Inserir Novas Cabeças
+    if (dir1) snake1.unshift({ x: p1X, y: p1Y });
+    if (p2Moved) snake2.unshift({ x: p2X, y: p2Y });
 
-    // Colisão do Jogador (Paredes ou Auto-colisão)
-    const hitWall = px < 0 || py < 0 || px >= canvasSize || py >= canvasSize;
-    const hitSelf = snake.slice(1).some(segment => segment.x === px && segment.y === py);
+    // VERIFICAÇÃO DE COLISÕES MORTAIS
+    if (dir1) {
+        const hitWallP1 = p1X < 0 || p1Y < 0 || p1X >= canvasSize || p1Y >= canvasSize;
+        const hitSelfP1 = snake1.slice(1).some(s => s.x === p1X && s.y === p1Y);
+        const hitEnemy = snake2.some(s => s.x === p1X && s.y === p1Y);
 
-    if (dir && (hitWall || hitSelf)) {
-        lives--;
-        document.getElementById("lives").innerText = lives;
-        if (lives <= 0) {
-            gameOver();
-        } else {
-            resetRound();
+        if (hitWallP1 || hitSelfP1 || hitEnemy) {
+            if (currentGameMode === "solo") {
+                handleFailure("Você bateu!");
+            } else {
+                endMultiplayerMatch("Jogador 2 Venceu! O Jogador 1 colidiu.");
+            }
+            return;
+        }
+    }
+
+    if (currentGameMode === "multi" && dir2) {
+        const hitWallP2 = p2X < 0 || p2Y < 0 || p2X >= canvasSize || p2Y >= canvasSize;
+        const hitSelfP2 = snake2.slice(1).some(s => s.x === p2X && s.y === p2Y);
+        const hitPlayer1 = snake1.some(s => s.x === p2X && s.y === p2Y);
+
+        if (hitWallP2 || hitSelfP2 || hitPlayer1) {
+            endMultiplayerMatch(`Jogador 1 (${currentUser}) Venceu! O Jogador 2 colidiu.`);
+            return;
         }
     }
 }
 
-function gameOver() {
-    alert(`Game Over! Sua pontuação final: ${score}`);
-    score = 0;
-    lives = 3;
-    document.getElementById("score").innerText = score;
+function handleFailure(reason) {
+    lives--;
     document.getElementById("lives").innerText = lives;
-    resetRound();
+    if (lives <= 0) {
+        alert(`Game Over! ${reason}\nPontuação final: ${scoreP1}`);
+        saveScore(scoreP1);
+        showMenu();
+    } else {
+        // Reset rápido do round
+        snake1 = [{x: 280, y: 200}];
+        dir1 = null; nextDir1 = null;
+        energy = 100;
+    }
 }
 
-// Loop de Renderização Física e Visual
-function gameLoop(timestamp) {
-    // Controla o ritmo das atualizações da cobra (Grid)
-    if (!lastGridUpdateTime) lastGridUpdateTime = timestamp;
-    const elapsed = timestamp - lastGridUpdateTime;
+function endMultiplayerMatch(resultMessage) {
+    alert(`Fim de jogo!\n${resultMessage}\nPlacar: P1 ${scoreP1} vs ${scoreP2} P2`);
+    showMenu();
+}
 
-    if (elapsed >= gameSpeed) {
-        updateGameLogic();
-        lastGridUpdateTime = timestamp;
-    }
+// Master Loop de Renderização Gráfica
+function masterLoop(timestamp) {
+    if (isGameRunning) {
+        if (!lastGridUpdateTime) lastGridUpdateTime = timestamp;
+        const elapsed = timestamp - lastGridUpdateTime;
 
-    // Renderização Visual (Roda de forma fluida a 60fps+ para partículas)
-    ctx.fillStyle = "#020617";
-    ctx.fillRect(0, 0, canvasSize, canvasSize);
+        if (elapsed >= gameSpeed) {
+            updateGameLogic();
+            lastGridUpdateTime = timestamp;
+        }
 
-    // Desenhar Comida
-    ctx.fillStyle = "#fbbf24";
-    ctx.beginPath();
-    ctx.arc(food.x + box/2, food.y + box/2, box/2 - 2, 0, Math.PI * 2);
-    ctx.fill();
+        // Renderizar elementos na tela
+        ctx.fillStyle = "#020617";
+        ctx.fillRect(0, 0, canvasSize, canvasSize);
 
-    // Desenhar Player (Verde)
-    snake.forEach((s, i) => {
-        ctx.fillStyle = i === 0 ? "#22c55e" : "#4ade80";
-        ctx.fillRect(s.x + 1, s.y + 1, box - 2, box - 2);
-    });
-
-    // Desenhar Bot (Vermelho)
-    bot.forEach((s, i) => {
-        ctx.fillStyle = i === 0 ? "#ef4444" : "#f87171";
-        ctx.fillRect(s.x + 1, s.y + 1, box - 2, box - 2);
-    });
-
-    // Atualizar e Desenhar Partículas
-    for (let i = particles.length - 1; i >= 0; i--) {
-        let p = particles[i];
-        ctx.fillStyle = p.color;
+        // Comida
+        ctx.fillStyle = "#e11d48";
         ctx.beginPath();
-        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+        ctx.arc(food.x + box/2, food.y + box/2, box/2 - 2, 0, Math.PI * 2);
         ctx.fill();
-        
-        p.x += p.dx;
-        p.y += p.dy;
-        p.life--;
-        if (p.life <= 0) particles.splice(i, 1);
-    }
 
-    requestAnimationFrame(gameLoop);
+        // Cobra 1 (Verde)
+        snake1.forEach((s, i) => {
+            ctx.fillStyle = i === 0 ? "#22c55e" : "#4ade80";
+            ctx.fillRect(s.x + 1, s.y + 1, box - 2, box - 2);
+        });
+
+        // Cobra 2 / Bot (Vermelho)
+        snake2.forEach((s, i) => {
+            ctx.fillStyle = i === 0 ? "#ef4444" : "#f87171";
+            ctx.fillRect(s.x + 1, s.y + 1, box - 2, box - 2);
+        });
+
+        // Partículas
+        for (let i = particles.length - 1; i >= 0; i--) {
+            let p = particles[i];
+            ctx.fillStyle = p.color;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+            ctx.fill();
+            p.x += p.dx; p.y += p.dy; p.life--;
+            if (p.life <= 0) particles.splice(i, 1);
+        }
+    }
+    requestAnimationFrame(masterLoop);
 }
 
-// Iniciar Jogo
-requestAnimationFrame(gameLoop);
+// Start
+requestAnimationFrame(masterLoop);
 </script>
-
 </body>
 </html>
